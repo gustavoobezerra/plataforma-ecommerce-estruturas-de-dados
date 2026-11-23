@@ -694,7 +694,8 @@ def salvar_dados():
     Exporta o estado da memória para o disco. A ordem das linhas importa:
       - ARVORE primeiro (produtos referenciam categorias);
       - PILHA da base para o topo (para reempilhar na mesma ordem);
-      - FILA do início para o fim (para preservar a ordem de chegada).
+      - FILA do início para o fim (para preservar a ordem de chegada);
+      - CONTADOR por último (próximo número de pedido, para não repetir IDs).
     """
     linhas = []
     for caminho in arvore_listar_caminhos():
@@ -707,6 +708,7 @@ def salvar_dados():
     for f in fila_pagamentos:
         linhas.append(SEP.join(["FILA", str(f["id"]), f["cliente"], f["metodo"],
                                 f"{f['valor']:.2f}", itens_para_texto(f["itens"])]))
+    linhas.append(SEP.join(["CONTADOR", str(contadores["pedido"])]))
 
     with open(ARQUIVO_DADOS, "w", encoding="utf-8") as arquivo:
         for linha in linhas:
@@ -730,6 +732,7 @@ def carregar_dados():
     fila_pagamentos.clear()
 
     carregados, ignorados = 0, 0
+    contador_salvo = 1
     for numero, linha in enumerate(linhas, start=1):
         if not linha.strip():
             continue
@@ -747,6 +750,8 @@ def carregar_dados():
                 fila_pagamentos.append({"id": int(campos[1]), "cliente": campos[2],
                                         "metodo": campos[3], "valor": float(campos[4]),
                                         "itens": texto_para_itens(campos[5])})
+            elif tipo == "CONTADOR" and len(campos) == 2:
+                contador_salvo = int(campos[1])
             else:
                 raise ValueError("formato desconhecido")
             carregados += 1
@@ -754,8 +759,10 @@ def carregar_dados():
             ignorados += 1
             print(f"  [!] Linha {numero} ignorada (formato inválido): {linha}")
 
-    # O próximo ID de pedido continua a partir do maior ID carregado
-    contadores["pedido"] = max((p["id"] for p in fila_pagamentos), default=0) + 1
+    # O próximo ID de pedido continua de onde parou (linha CONTADOR). Se o arquivo
+    # não tiver essa linha, usa o maior ID que ainda está na fila + 1.
+    maior_id_na_fila = max((p["id"] for p in fila_pagamentos), default=0)
+    contadores["pedido"] = max(contador_salvo, maior_id_na_fila + 1)
     print(f"  [OK] {carregados} registro(s) carregados de '{ARQUIVO_DADOS}'"
           + (f" ({ignorados} ignorado(s))." if ignorados else "."))
 

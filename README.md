@@ -113,6 +113,7 @@ PILHA|ADICIONAR|103|2
 PILHA|REMOVER|103|1
 FILA|2|Bruno|Boleto|80.00|
 FILA|3|Ana|Pix|4249.90|101:1,103:1
+CONTADOR|4
 ```
 
 | Identificador | Campos |
@@ -121,6 +122,7 @@ FILA|3|Ana|Pix|4249.90|101:1,103:1
 | `LISTA` | id, nome, preço, estoque, categoria |
 | `PILHA` | ação, id do produto, quantidade, **da base para o topo** |
 | `FILA` | id do pedido, cliente, forma de pagamento, valor, itens (`id:qtd,id:qtd`), **do início para o fim** |
+| `CONTADOR` | próximo número de pedido, para que um pedido novo nunca repita o número de um antigo |
 
 A **ordem das linhas preserva a semântica** de cada estrutura: ao carregar, a pilha é reempilhada na mesma sequência (o topo continua sendo o topo) e a fila é reenfileirada na mesma ordem de chegada. Linhas com formato inválido são ignoradas com um aviso, sem interromper o carregamento.
 
